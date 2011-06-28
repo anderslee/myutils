@@ -1,0 +1,22 @@
+[user]
+	name = anderslee
+	email = anderslee@yeah.net
+[gui]
+	fontui = -family \"times new roman\" -size 10 -weight bold -slant roman -underline 0 -overstrike 0
+	fontdiff = -family \"times new roman\" -size 10 -weight normal -slant roman -underline 0 -overstrike 0
+	spellingdictionary = en_US
+[core]
+	editor = vim
+[merge]
+	tool = vimdiff
+[alias]
+	ci = commit
+	co = checkout
+	st = status
+	br = branch
+	unstage = reset HEAD --
+	last = log -1 HEAD
+	visual = !gitk
+	#git unstage fileA == git reset HEAD fileA
+[color]
+	ui = true

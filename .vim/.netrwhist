@@ -1,0 +1,9 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =7
+let g:netrw_dirhist_1='/home/hume/.config/transmission/resume'
+let g:netrw_dirhist_2='/home/hume/.config/transmission'
+let g:netrw_dirhist_3='/home/hume/.config/transmission/torrents'
+let g:netrw_dirhist_4='/home/hume/.config/transmission'
+let g:netrw_dirhist_5='/usr/share/doc/libobject-insideout-perl'
+let g:netrw_dirhist_6='/usr/share/doc/libobject-insideout-perl/examples'
+let g:netrw_dirhist_7='/usr/share/doc/libobject-insideout-perl'
