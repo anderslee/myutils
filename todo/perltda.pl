@@ -5,7 +5,7 @@
 #
 #        USAGE:  ./yamltda.pl  
 #
-#  DESCRIPTION:  yaml tda
+#  DESCRIPTION: tda built on perl
 #
 #      OPTIONS:  ---
 # REQUIREMENTS:  ---
@@ -22,14 +22,19 @@ use strict;
 use warnings;
 use diagnostics;
 
+
 use utf8;
-binmode(STDOUT, ':encoding(utf8)');
 binmode(STDIN, ':encoding(utf8)');
+binmode(STDOUT, ':encoding(utf8)');
 
 use Modern::Perl;
-use YAML qw(DumpFile LoadFile);
 
-use local::lib;
+use Storable;
+#use DBM::Deep;
+
+#use Smart::Comments;
+
+#use local::lib;
 
 my $VERSION = '0.1.20';
 
@@ -38,9 +43,12 @@ my @PRIORITY = qw(sys veryhigh high medium low verylow);
 #use My::YAML::Tiny;
 
 
-init_todo(my_readline()) unless -f '.todo';
+unless (-f '.todo') {
+        todo_init(my_readline());
+        exit;
+}
 
-todo_write(my_readline());
+todo_add(my_readline());
 
 #######################################################################
 
@@ -73,47 +81,79 @@ sub my_readline {
         return ($content, $priority);
 }
 
-sub todo_write
+sub todo_init
 {
         my ($content, $priority) = @_;
+        my $todo_file = '.todo';
         my $time = time;
 
-        my ($string, $arrayref) = LoadFile('.todo');
+        my $hashref = {};
         
-        my $note = {
-                id => $#$arrayref,
-                priority => $PRIORITY[$priority],
-                time => $time,
-                content => $content,
-        };
+        $hashref->{todo} = $VERSION;
+        $hashref->{notes} = [];
 
-
-        push @$arrayref, $note;
-        DumpFile('.todo', $string, $arrayref);
-}
-
-sub init_todo
-{
-        my ($content, $priority) = @_;
-        my $time = time;
-        my $notes = {};
-
-        $notes->{todo} = $VERSION;
-        $notes->{note} = [];
         my $note = {
                 id => 1,
                 priority => $PRIORITY[$priority],
                 time => $time,
                 content => $content,
         };
+        push @{$hashref->{notes}}, $note;
 
-        push @{$notes->{note}}, $note;
+        store $hashref, $todo_file;
 
-        my $todo_file = '.todo';
+        #my $xml = XMLout($ref);
 
-        DumpFile($todo_file, $notes->{todo}, $notes->{note});
+        #substr $xml, 0, 0, qq{<?xml version="1.0"?>\n};
 
+        #open my $todo_fd, ">", $todo_file or die "open: $!\n";
+
+        #print {$todo_fd} $xml;
+
+        #close $todo_fd;
         chmod 0600, $todo_file;
+
+        return;
+}
+
+sub todo_add
+{
+        my ($content, $priority) = @_;
+        my $todo_file = '.todo';
+        my $time = time;
+
+        my $hashref = retrieve $todo_file;
+
+        my $max_id = 1;
+        for my $note (@{$hashref->{notes}}) {
+                my $id = $note->{id};
+                $max_id = $max_id gt $id ? $max_id : $id;
+        }
+        $max_id++;
+
+        #my @ids = (map { $_->{id}  } @{$hashref->{notes}});
+        #my $max_id = max @ids;
+
+        my $note = {
+                id => $max_id,
+                priority => $PRIORITY[$priority],
+                time => $time,
+                content => $content,
+        };
+
+        push @{$hashref->{notes}}, $note;
+        store $hashref, $todo_file;
+
+        #my $xml = XMLout($ref);
+
+        #substr $xml, 0, 0, qq{<?xml version="1.0"?>\n};
+
+        #unlink $todo_file;
+        #open my $todo_fd, ">", $todo_file or die "open: $!\n";
+
+        #print {$todo_fd} $xml;
+
+        #close $todo_fd;
 
         return;
 }
