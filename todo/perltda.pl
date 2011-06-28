@@ -38,8 +38,8 @@ use Storable;
 
 my $VERSION = '0.1.20';
 
-my @PRIORITY = qw(sys veryhigh high medium low verylow);
-
+my @PRIORITY = qw(veryhigh high medium low verylow);
+my @color = qw(red yellow green blue cyan);
 
 unless (-f '.todo') {
         todo_init(my_readline());
@@ -75,7 +75,7 @@ sub my_readline {
         say "请输入优先级，退出请输入q";
 
         while (1) {
-                if (defined($_ = $term->readline('优先级'))) {
+                if (defined($_ = $term->readline('优先级: '))) {
                         exit if /^q$/;
                         next unless /\d/;
                         $priority = $_;
@@ -97,8 +97,9 @@ sub todo_init
         $hashref->{todo} = $VERSION;
         $hashref->{notes} = {};
 
+        $priority--;
         my $note = {
-                priority => $PRIORITY[$priority],
+                priority => $priority,
                 time => $time,
                 content => $content,
         };
@@ -137,8 +138,10 @@ sub todo_add
         #my @ids = (map { $_->{id}  } @{$hashref->{notes}});
         #my $max_id = max @ids;
 
+        $priority--;
+
         my $note = {
-                priority => $PRIORITY[$priority],
+                priority => $priority,
                 time => $time,
                 content => $content,
         };

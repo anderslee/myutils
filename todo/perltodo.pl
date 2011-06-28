@@ -32,6 +32,9 @@ use Storable;
 
 my $todo_file = '.todo';
 
+my @PRIORITY = qw(veryhigh high medium low verylow);
+my @color = qw(red yellow green blue cyan);
+
 unless (-f $todo_file) {
         say "$todo_file not exists, please use perltda to create one";
         exit;
@@ -52,14 +55,6 @@ sub todo_print
         my $hashref = retrieve $todo_file;
 
 
-        my %color = (
-                veryhigh => 'red',
-                high => 'yellow',
-                medium => 'green',
-                low => 'blue',
-                verylow => 'cyan',
-        );
-
         for my $id (sort keys %{$hashref->{notes}}) {
                 # comment为done标志
                 next if defined $hashref->{notes}->{$id}->{done};
@@ -71,7 +66,7 @@ sub todo_print
                 ### $content
 
                 printf ("%4d: ", $id);
-                print color $color{$priority};
+                print color $color[$priority];
                 print $content;
 
                 print color 'reset';

@@ -33,16 +33,9 @@ my $VERSION = '0.10';
 
 my $todo_file = '.todo';
 
-my @PRIORITY = qw(sys veryhigh high medium low verylow);
 
-my %color = (
-        veryhigh => 'red',
-        high => 'yellow',
-        medium => 'green',
-        low => 'blue',
-        verylow => 'cyan',
-);
- 
+my @PRIORITY = qw(veryhigh high medium low verylow);
+my @color = qw(red yellow green blue cyan);
 
 
 unless (-f '.todo') {
@@ -78,20 +71,23 @@ sub todo_done {
                 }
         }
 
-        my $priority = $hashref->{notes}->{$id}->{priority};
-        my $content = $hashref->{notes}->{$id}->{content};
-
-        if (defined $hashref->{notes}->{$id}->{done}) {
+        if ( !defined $hashref->{notes}->{$id}
+                || defined $hashref->{notes}->{$id}->{done}) {
                 say "the id you typed is not legal";
                 say "please use perltodo to check your todo list";
                 exit;
         }
-        
+ 
+
+        my $priority = $hashref->{notes}->{$id}->{priority};
+        my $content = $hashref->{notes}->{$id}->{content};
+
+       
         ### $priority
         ### $content
         
         printf ("%4d: ", $id);
-        print color $color{$priority};
+        print color $color[$priority];
         print $content;
         
         print color 'reset';
