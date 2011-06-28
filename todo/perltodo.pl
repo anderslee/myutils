@@ -28,12 +28,14 @@ use Term::ANSIColor;
 
 my $VERSION = '0.1.20';
 
-use utf8;
-binmode(STDOUT, ':encoding(utf8)');
-
 use Storable;
 
 my $todo_file = '.todo';
+
+unless (-f $todo_file) {
+        say "$todo_file not exists, please use perltda to create one";
+        exit;
+}
 
 #use Data::Dumper qw(Dumper);
 
@@ -58,19 +60,23 @@ sub todo_print
                 verylow => 'cyan',
         );
 
-        for my $note (@{$hashref->{notes}}) {
-                my $priority = $note->{priority};
-                my $content = $note->{content};
+        for my $id (sort keys %{$hashref->{notes}}) {
+                # comment为done标志
+                next if defined $hashref->{notes}->{$id}->{done};
+
+                my $priority = $hashref->{notes}->{$id}->{priority};
+                my $content = $hashref->{notes}->{$id}->{content};
 
                 ### $priority
                 ### $content
 
-                printf ("%4d: ", $note->{id});
-                print colored($note->{content}, $color{$priority});
+                printf ("%4d: ", $id);
+                print color $color{$priority};
+                print $content;
 
+                print color 'reset';
                 print "\n";
         }
 
-        print color 'reset';
         return;
 }

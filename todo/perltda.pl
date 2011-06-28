@@ -40,8 +40,6 @@ my $VERSION = '0.1.20';
 
 my @PRIORITY = qw(sys veryhigh high medium low verylow);
 
-#use My::YAML::Tiny;
-
 
 unless (-f '.todo') {
         todo_init(my_readline());
@@ -60,22 +58,29 @@ sub my_readline {
         my $term = Term::ReadLine->new('todo');
         my $OUT = $term->OUT() || \*STDOUT;
 
-        say "请输入要完成的事项, 要退出请输入q";
+        say "请输入需要完成的事项, 退出请输入q";
 
-        CONTENT: while (defined($_ = $term->readline('text: '))) {
-                exit if /^q$/;
-                redo CONTENT unless /\S/;
-                $content = $_;
-                last CONTENT;
-                #$term->addhistory($_);
+        while (1) {
+                if (defined($_ = $term->readline('内容: '))) {
+                        exit if /^q$/;
+                        next unless /\S/;
+                        $content = $_;
+                        last;
+                        #$term->addhistory($_);
+                }
         }
 
-        say "请输入优先级数字";
+        say "1: veryhigh 2: high 3: medium 4: low 5: verylow";
 
-        PRIORITY: while (defined($_ = $term->readline('priority'))) {
-                redo PRIORITY unless /\d/;
-                $priority = $_;
-                last PRIORITY;
+        say "请输入优先级，退出请输入q";
+
+        while (1) {
+                if (defined($_ = $term->readline('优先级'))) {
+                        exit if /^q$/;
+                        next unless /\d/;
+                        $priority = $_;
+                        last;
+                }
         }
 
         return ($content, $priority);
@@ -90,15 +95,14 @@ sub todo_init
         my $hashref = {};
         
         $hashref->{todo} = $VERSION;
-        $hashref->{notes} = [];
+        $hashref->{notes} = {};
 
         my $note = {
-                id => 1,
                 priority => $PRIORITY[$priority],
                 time => $time,
                 content => $content,
         };
-        push @{$hashref->{notes}}, $note;
+        $hashref->{notes}->{1} = $note;
 
         store $hashref, $todo_file;
 
@@ -125,8 +129,7 @@ sub todo_add
         my $hashref = retrieve $todo_file;
 
         my $max_id = 1;
-        for my $note (@{$hashref->{notes}}) {
-                my $id = $note->{id};
+        for my $id (keys %{$hashref->{notes}}) {
                 $max_id = $max_id gt $id ? $max_id : $id;
         }
         $max_id++;
@@ -135,13 +138,12 @@ sub todo_add
         #my $max_id = max @ids;
 
         my $note = {
-                id => $max_id,
                 priority => $PRIORITY[$priority],
                 time => $time,
                 content => $content,
         };
 
-        push @{$hashref->{notes}}, $note;
+        $hashref->{notes}->{$max_id} = $note;
         store $hashref, $todo_file;
 
         #my $xml = XMLout($ref);
