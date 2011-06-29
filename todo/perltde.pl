@@ -42,6 +42,19 @@ unless (-f '.todo') {
         exit;
 }
 
+
+use Getopt::Long;
+
+my $options = {
+        help => 0,
+};
+
+GetOptions(
+        "help|h" => \$options->{help},
+);
+
+show_usage() if $options->{help};
+
 my $hashref = retrieve $todo_file;
 
 todo_edit();
@@ -161,4 +174,12 @@ sub todo_edit {
 sub print_default
 {
         return;
+}
+
+sub show_usage {
+        print <<"END_USAGE";
+$0 [--help|-h]
+--help|-h 打印帮助
+END_USAGE
+        exit;
 }

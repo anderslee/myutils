@@ -42,6 +42,21 @@ unless (-f '.todo') {
         exit;
 }
 
+use Getopt::Long;
+
+my $options = {
+        help => 0,
+        all => 0,
+};
+
+GetOptions(
+        "help|h" => \$options->{help},
+        "all|a" => \$options->{all},
+);
+
+show_usage() if $options->{help};
+
+
 my $hashref = retrieve $todo_file;
 
 todo_remove();
@@ -70,8 +85,12 @@ sub todo_remove {
                 }
         }
 
-        if ( !defined $hashref->{notes}->{$id}
-                || defined $hashref->{notes}->{$id}->{done}) {
+        if (
+                ( !defined $hashref->{notes}->{$id})
+                ||
+                (defined $hashref->{notes}->{$id}->{done})
+                        && !$options->{all})
+        {
                 say "the id you typed is not legal";
                 say "please use perltodo to check your todo list";
                 exit;
@@ -93,7 +112,13 @@ sub todo_remove {
  
 
         say "确认删除请输入y，退出请输入q";
-        say "如果事项已经完成，可以使用perltdd来完成它";
+        say "如果事项已经完成，可以使用perltdd来完成它"
+                unless ($options->{all}
+                        && defined $hashref->{notes}->{$id}->{done});
+        say "此事项已经完成，删除它已经没有意义了"
+                if ($options->{all}
+                        && defined $hashref->{notes}->{$id}->{done});
+
         while (1) {
                 if (defined($_ = $term->readline('您还要删除吗: '))) {
                         exit if /^q$/;
@@ -158,4 +183,13 @@ sub todo_remove {
 sub print_default
 {
         return;
+}
+
+sub show_usage {
+        print <<"END_USAGE";
+$0 [--help|-h][--all|-a]
+--all|-a 删除已完成事项
+--help|-h 打印帮助
+END_USAGE
+        exit;
 }

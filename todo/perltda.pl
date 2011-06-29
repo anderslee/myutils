@@ -46,6 +46,18 @@ unless (-f '.todo') {
         exit;
 }
 
+my $options = {
+        help    => 0,
+};
+
+use Getopt::Long;
+
+GetOptions(
+       "help|h" => \$options->{help}, 
+);
+
+show_usage() if $options->{help};
+
 todo_add(my_readline());
 
 #######################################################################
@@ -161,4 +173,13 @@ sub todo_add
         #close $todo_fd;
 
         return;
+}
+
+
+sub show_usage {
+        print <<"END_USAGE";
+$0 [--help|-h]
+--help|-h 打印帮助
+END_USAGE
+        exit;
 }

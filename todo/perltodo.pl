@@ -35,6 +35,20 @@ my $todo_file = '.todo';
 my @PRIORITY = qw(veryhigh high medium low verylow);
 my @color = qw(red yellow green blue cyan);
 
+my $options = {
+        show_all => 0,
+        help => 0,
+};
+
+use Getopt::Long;
+
+GetOptions(
+        "all|a" => \$options->{show_all},
+        "help|h" => \$options->{help},
+);
+
+show_usage() if $options->{help};
+
 unless (-f $todo_file) {
         say "$todo_file not exists, please use perltda to create one";
         exit;
@@ -57,7 +71,8 @@ sub todo_print
 
         for my $id (sort keys %{$hashref->{notes}}) {
                 # comment为done标志
-                next if defined $hashref->{notes}->{$id}->{done};
+                next if (defined $hashref->{notes}->{$id}->{done}
+                                && !$options->{show_all});
 
                 my $priority = $hashref->{notes}->{$id}->{priority};
                 my $content = $hashref->{notes}->{$id}->{content};
@@ -74,4 +89,14 @@ sub todo_print
         }
 
         return;
+}
+
+
+sub show_usage {
+        print <<"END_USAGE";
+$0 [--all|-a]
+-all|-a 打印所有事项，包括已经完成的
+END_USAGE
+
+        exit;
 }
