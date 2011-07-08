@@ -33,13 +33,15 @@ use POE::Wheel::ReadWrite;
 # start the server session
 
 POE::Session->create (
-        inline_states => {
-                _start => \&server_start,
-                server_accepted => \&server_accepted,
-                server_error => \&server_error,
-                client_input => \&client_input,
-                client_error => \&client_error,
-        },
+        package_states => [
+                echo => {
+                        _start => \&server_start,
+                        server_accepted => \&server_accepted,
+                        server_error => \&server_error,
+                        client_input => \&client_input,
+                        client_error => \&client_error,
+                },
+        ],
 );
 
 
