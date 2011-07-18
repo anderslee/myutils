@@ -1,0 +1,13 @@
+【51CTO独家特稿】Linux双网卡绑定一个IP地址，实质工作就是使用两块网卡虚拟为一块，使用同一个IP地址，是我们能够得到更好的更快的服务。其实这项技术在Sun和Cisco中早已存在，被称为Trunking和Etherchannel技术，在Linux的2.4.x的内核中也采用这这种技术，被称为bonding。本文以Debian为例介绍这个技术的实现。
+
+http://os.51cto.com/art/201102/245483.htm
+
+
+FAI，debian版的kickstart
+
+http://os.51cto.com/art/201102/245803.htm
+
+
+
+打deb包
+http://www.debian.org/doc/devel-manuals#maint-guide

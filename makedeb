@@ -1,0 +1,353 @@
+#!/bin/sh
+
+# 自动创建 .deb 的脚本 2.0
+# 2010-10-31	2.0
+# 2010-08-12	1.0
+#
+# fanhe <fanhed@163.com>
+# 必要条件
+# makefile 支持 DESTDIR 变量 或 configure 脚本支持 --prefix 选项
+
+
+
+### Function Implementation Begin ###
+
+test_name()
+{
+	local valid_name=""
+	if [ -n "$1" ]; then
+		valid_name="$1"
+	else
+		valid_name="makedeb_temp"
+	fi
+	i=0;
+	while [ -e "${valid_name}_$i" ]; do
+		i=$(($i+1))
+	done
+
+	echo "${valid_name}_$i"
+}
+
+echo_summary()
+{
+	echo "0 - Package:        [ $Package ]"
+	echo "1 - Version:        [ $Version ]"
+	echo "2 - Architecture:   [ $Architecture ]"
+	echo "3 - Maintainer:     [ $Maintainer ]"
+	echo "4 - Priority:       [ $Priority ]"
+	echo "5 - Section:        [ $Section ]"
+	echo "6 - Installed-Size: [ <Automatically update> ]"
+	echo "7 - Depends:        [ $Depends ]"
+	echo "8 - Description:    [ $Description ]"
+	echo "9 - Long-Description:"
+	echo "$Long_Description" | sed s/^/\ \ \ \ \ /g
+	echo
+}
+
+question_summary()
+{
+	echo_summary
+	#read -p "输入一个数字来改变它们，或按回车键继续：" num
+	read -p "Enter a number to change any of them or press ENTER to continue:" num
+}
+
+read_long_description()
+{
+	echo "Please input a long description: (Input a empty line to end.)"
+	local line=" "
+	local temp=""
+	while [ -n "$line" ]; do
+		read -p ">> " line
+		if [ -n "$line" ]; then
+			if [ -z "$temp" ]; then
+				temp="$line"
+			else
+				temp="$temp
+$line"
+			fi
+		fi
+	done
+	if [ -n "$temp" ]; then
+		Long_Description="$temp"
+	fi
+}
+
+question()
+{
+	if [ $1 = 0 ]; then
+		#echo "请输入维护者的姓名以及 e-mail 地址: "
+		#read -p ">> " Source
+		read -p "Package: " temp
+		if [ -n "$temp" ]; then
+			Package="$temp"
+		fi
+	elif [ $1 = 1 ]; then
+		read -p "Version: " temp
+		if [ -n "$temp" ]; then
+			Version="$temp"
+		fi
+	elif [ $1 = 2 ]; then
+		read -p "Architecture: " temp
+		if [ -n "$temp" ]; then
+			Architecture="$temp"
+		fi
+	elif [ $1 = 3 ]; then
+		read -p "Maintainer: " temp
+		if [ -n "$temp" ]; then
+			Maintainer="$temp"
+		fi
+	elif [ $1 = 4 ]; then
+		read -p "Priority: " temp
+		if [ -n "$temp" ]; then
+			Priority="$temp"
+		fi
+	elif [ $1 = 5 ]; then
+		read -p "Section: " temp
+		if [ -n "$temp" ]; then
+			Section="$temp"
+		fi
+	elif [ $1 = 6 ]; then
+		read -p "Installed-Size: " temp
+		if [ -n "$temp" ]; then
+			Installed_Size="$temp"
+		fi
+	elif [ $1 = 7 ]; then
+		read -p "Depends: " temp
+		if [ -n "$temp" ]; then
+			Depends="$temp"
+		fi
+	elif [ $1 = 8 ]; then
+		read -p "Description: " temp
+		if [ -n "$temp" ]; then
+			Description="$temp"
+		fi
+	elif [ $1 = 9 ]; then
+		read_long_description
+	fi
+}
+
+write_control()
+{
+	echo Package: $Package
+	echo Version: $Version
+	echo Architecture: $Architecture
+	echo Maintainer: $Maintainer
+	echo Priority: $Priority
+	echo Section: $Section
+	echo Installed-Size: $Installed_Size
+	echo Depends: $Depends
+	echo Description: $Description
+	echo "$Long_Description" | sed s/^/\ /g
+	echo
+}
+
+usage()
+{
+	cat >& 1 << EOF
+Usage: makedeb [options]
+
+Options:
+  -h , --help
+    This help text.
+
+  -a
+    Run all install procedures(configure && make && make install).
+	makedeb only run "make install" by default.
+
+  -c <configure options>
+    Run configure with assigned options, you need use -a option together.
+
+  -d <diretory>
+    Build a deb archive. If you use -d, then -a & -c & -i & -m will be ignored.
+
+  -i
+    Run make install with assigned options.
+
+  -j <number>
+    Run with <number> jobs(mutiple threads).
+
+  -m <configure options>
+    Run make with assigned options, you need use -a option together.
+EOF
+}
+
+handle_opts()
+{
+	h_opts=""
+	a_opts=""
+	c_opts=""
+	d_opts=""
+	i_opts=""
+	j_opts=""
+	m_opts=""
+
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			-h | --help )
+				h_opts="$1"
+				;;
+			-a )
+				a_opts="$1"
+				;;
+			-c )
+				shift
+				c_opts="$1"
+				;;
+			-d )
+				shift
+				d_opts="$1"
+				;;
+			-i )
+				shift
+				i_opts="$1"
+				;;
+			-j )
+				shift
+				j_opts="-j $1"
+				;;
+			-m )
+				shift
+				m_opts="$1"
+				;;
+		esac
+		shift
+	done
+}
+
+cleanup()
+{
+	rm -rf "$temp_dir"
+
+	if [ $# -eq 0 ]; then
+		exit 1
+	else
+		exit 0
+	fi
+}
+
+finish()
+{
+	cat >& 1 << EOF
+----------------------------------------
+    makedeb finish !!!
+
+========================================
+    ${Package}_${Version}_${Architecture}.deb"
+========================================
+EOF
+}
+
+### Function Implementation End ###
+
+
+########## Start ##########
+handle_opts "$@"
+
+if [ -n "$h_opts" ]; then
+	usage
+	exit 0
+fi
+
+if [ -z "$a_opts" -a -z "$d_opts" ]; then
+	if [ ! -f GNUmakefile -a ! -f makefile -a ! -f Makefile ]; then
+		echo "There isn't a Makefie !"
+		exit 1
+	fi
+fi
+
+if [ -n "$a_opts" ]; then
+	if [ ! -f configure -o ! -x configure ]; then
+		echo "There isn't a valid configure script !"
+		exit 1
+	fi
+fi
+
+#dir=${PWD##*/}
+dir=$(basename "$PWD")
+pack_name=${dir%-*}
+pack_ver=${dir##*-}
+
+if [ "$pack_name" = "$pack_ver" ]; then
+	pack_ver="1.0"
+fi
+
+arch=$(uname -m)
+if [ "$arch" = "i686" ]; then
+    arch="i386"
+elif [ "$arch" = "x86_64" ]; then
+    arch="amd64"
+fi
+
+
+Package="$pack_name"
+Version="$pack_ver"
+Architecture="$arch"
+Maintainer="$USER"
+Priority=optional
+Section=makedeb
+Installed_Size=""
+Depends=""
+Description="$Package"
+Long_Description="Package created by makedeb"
+
+
+# Interaction Begin #
+
+echo "########################################"
+echo
+
+question_summary
+while [ -n "$num" ]
+do
+	if [ "$num" -lt 0 -o "$num" -gt 9 ]
+	then
+		echo
+		question_summary
+	else
+		question "$num"
+		echo
+		question_summary
+	fi
+done
+
+# Interaction End #
+
+
+# Package Created #
+
+if [ -n "$d_opts" ]; then
+	Installed_Size=$(du -s --exclude=DEBIAN "$d_opts" | awk '{print $1}')
+	mkdir -p "$d_opts/DEBIAN"
+	write_control > "$d_opts/DEBIAN/control"
+	dpkg-deb -b "$d_opts" "${Package}_${Version}_${Architecture}.deb" || exit $?
+	finish
+	exit 0
+fi
+
+temp_dir=$(test_name)
+
+mkdir "./$temp_dir"
+mkdir "./$temp_dir/DEBIAN"
+touch "./$temp_dir/DEBIAN/control"
+#touch "./$temp_dir/DEBIAN/preinst" && chmod 755 "./$temp_dir/DEBIAN/preinst"
+#touch "./$temp_dir/DEBIAN/postinst" && chmod 755 "./$temp_dir/DEBIAN/postinst"
+#touch "./$temp_dir/DEBIAN/prerm" && chmod 755 "./$temp_dir/DEBIAN/prerm"
+#touch "./$temp_dir/DEBIAN/postrm" && chmod 755 "./$temp_dir/DEBIAN/postrm"
+#gedit "./$temp_dir/DEBIAN/control"
+
+if [ "$a_opts" = "-a" ]; then
+	./configure --prefix="$PWD/$temp_dir/usr/local" $c_opts || cleanup
+	make clean
+	make $m_opts $j_opts || cleanup
+	mkdir -p "$temp_dir/usr/local"
+	make install $i_opts || cleanup
+else
+	make install DESTDIR="$PWD/$temp_dir" $i_opts || cleanup
+fi
+
+Installed_Size=$(du -s --exclude=DEBIAN "./$temp_dir" | awk '{print $1}')
+write_control > "./$temp_dir/DEBIAN/control"
+dpkg-deb -b "./$temp_dir" "${Package}_${Version}_${Architecture}.deb" || cleanup
+
+finish
+cleanup 0
