@@ -11,3 +11,40 @@ http://os.51cto.com/art/201102/245803.htm
 
 打deb包
 http://www.debian.org/doc/devel-manuals#maint-guide
+
+aptitude show debhelper
+
+
+
+cat bin/paste-img/Makefile 
+
+#!/usr/bin/make -f
+
+clean:
+   rm -rf deb
+
+deb:   clean
+   -mkdir -p deb/DEBIAN
+   cp -u control deb/DEBIAN
+   -mkdir -p deb/usr/bin
+   -mkdir -p deb/usr/share/applications
+   -mkdir -p deb/usr/share/paste-img
+   -mkdir -p deb/usr/share/pixmaps
+   cp -u *.desktop deb/usr/share/applications
+   cp -u *.pl *.glade *.png deb/usr/share/paste-img
+   cd deb/usr/share/pixmaps; \
+   ln -sf ../share/paste-img/*.png . ;\
+   cd ../../../..
+   cd deb/usr/bin; \
+   ln -sf ../share/paste-img/*.pl . ;\
+   cd ../../..
+   dpkg-deb -b deb .
+#   rm -r deb
+
+
+
+
+google 后知道是 set -o vi，随便输入一条命令，再按 esc 键，然后可以对命令进行 vi 式的移动，替换等操作……
+
+
+http://linux.chinaunix.net/techdoc/install/2006/05/09/932060.shtml
